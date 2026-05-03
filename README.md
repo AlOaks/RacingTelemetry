@@ -28,7 +28,7 @@ A real-time F1 telemetry ingestion and analysis API built with C# and .NET. Sync
 ### 1. Clone the repo
 
 ```bash
-git clone git@github.com:yourusername/RacingTelemetry.git
+git clone git@github.com:AlOaks/RacingTelemetry.git
 cd RacingTelemetry
 ```
 
