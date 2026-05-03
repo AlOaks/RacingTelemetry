@@ -1,0 +1,23 @@
+# Build output
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+.vs/
+
+# Environment & secrets
+appsettings.Development.json
+*.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Rider / Cursor
+.idea/
+.vscode/
+
+# dotnet tool manifests
+.config/

@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Racing Telemetry</title>
+<link rel="icon" type="image/x-icon" href="/rc-favicon-tm.ico">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080a0f;
+    --bg3: #141923;
+    --border: #1e2736;
+    --accent: #e8ff00;
+    --accent2: #ff3c3c;
+    --accent3: #00d4ff;
+    --text: #c9d4e8;
+    --text-dim: #4a5568;
+    --text-bright: #ffffff;
+    --card: #0f141d;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(232,255,0,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,255,0,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    position: relative;
+    z-index: 10;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(232,255,0,0.04) 0%, transparent 100%);
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+
+  .logo {
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: 18px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .logo span { color: var(--text-dim); }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  .layout {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: calc(100vh - 64px);
+  }
+
+  /* Sidebar */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    overflow-y: auto;
+    max-height: calc(100vh - 64px);
+    position: sticky;
+    top: 0;
+  }
+
+  .sidebar-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    padding: 8px 20px 12px;
+  }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+  }
+
+  .sidebar-item:hover {
+    background: rgba(232,255,0,0.04);
+    border-left-color: rgba(232,255,0,0.3);
+    color: var(--text-bright);
+  }
+
+  .sidebar-item.active {
+    background: rgba(232,255,0,0.08);
+    border-left-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .driver-num {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    min-width: 28px;
+  }
+
+  .driver-info { flex: 1; }
+  .driver-name { font-size: 13px; line-height: 1.2; }
+  .driver-team { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+
+  /* Main */
+  .main {
+    padding: 32px 40px;
+    overflow-y: auto;
+  }
+
+  .section-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Leaderboard */
+  .leaderboard {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 40px;
+  }
+
+  .lb-row {
+    display: grid;
+    grid-template-columns: 40px 40px 1fr 120px 100px 100px;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+
+  .lb-row:first-child {
+    border-color: rgba(232,255,0,0.3);
+    background: rgba(232,255,0,0.04);
+  }
+
+  .lb-pos {
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
+  .lb-row:first-child .lb-pos { color: var(--accent); }
+  .lb-num { font-family: 'Orbitron', monospace; font-size: 11px; color: var(--accent); text-align: center; }
+  .lb-name { font-size: 13px; color: var(--text-bright); }
+  .lb-team { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+  .lb-circuit { font-size: 12px; color: var(--text-dim); }
+  .lb-time { font-family: 'Orbitron', monospace; font-size: 13px; color: var(--accent); text-align: right; }
+  .lb-lap { font-size: 11px; color: var(--text-dim); text-align: right; }
+
+  /* Driver hero */
+  .driver-hero {
+    display: none;
+    margin-bottom: 36px;
+  }
+
+  .driver-hero.visible { display: flex; gap: 32px; align-items: flex-start; }
+
+  .driver-headshot {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border: 2px solid var(--border);
+    background: var(--card);
+    flex-shrink: 0;
+  }
+
+  .driver-headshot-placeholder {
+    width: 120px;
+    height: 120px;
+    background: var(--card);
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', monospace;
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .driver-hero-info { flex: 1; }
+
+  .driver-hero-number {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .driver-hero-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--text-bright);
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+
+  .driver-hero-team {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  .driver-hero-stats {
+    display: flex;
+    gap: 24px;
+  }
+
+  .hero-stat { }
+  .hero-stat-label { font-size: 9px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; }
+  .hero-stat-value { font-family: 'Orbitron', monospace; font-size: 18px; color: var(--accent); margin-top: 2px; }
+
+  /* Sessions for driver */
+  .sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 32px;
+  }
+
+  .session-row {
+    display: grid;
+    grid-template-columns: 1fr 160px 80px;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+
+  .session-row:hover {
+    border-left-color: var(--accent3);
+    background: rgba(0,212,255,0.04);
+  }
+
+  .session-row.active {
+    border-left-color: var(--accent3);
+    background: rgba(0,212,255,0.06);
+  }
+
+  .session-circuit-name {
+    font-size: 14px;
+    color: var(--text-bright);
+  }
+
+  .session-country {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 3px;
+  }
+
+  .session-date-val { font-size: 12px; color: var(--text-dim); text-align: right; }
+  .session-laps-count {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    color: var(--accent3);
+    text-align: right;
+  }
+
+  /* Lap cards */
+  .laps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+    margin-bottom: 32px;
+  }
+
+  .lap-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .lap-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--border);
+    transition: background 0.15s;
+  }
+
+  .lap-card:hover { border-color: rgba(0,212,255,0.4); }
+  .lap-card:hover::before { background: var(--accent3); }
+  .lap-card.selected { border-color: var(--accent3); background: rgba(0,212,255,0.06); }
+  .lap-card.selected::before { background: var(--accent3); }
+  .lap-card.fastest { border-color: rgba(232,255,0,0.4); }
+  .lap-card.fastest::before { background: var(--accent); }
+  .lap-card.fastest.selected { border-color: var(--accent); background: rgba(232,255,0,0.06); }
+
+  .lap-num { font-family: 'Orbitron', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 6px; }
+  .lap-time { font-family: 'Orbitron', monospace; font-size: 15px; color: var(--text-bright); margin-bottom: 4px; }
+  .lap-card.fastest .lap-time { color: var(--accent); }
+  .lap-card.selected:not(.fastest) .lap-time { color: var(--accent3); }
+  .lap-sectors { display: flex; gap: 4px; margin-top: 8px; }
+  .sector { flex: 1; height: 2px; background: var(--border); border-radius: 1px; }
+  .lap-card.fastest .sector { background: rgba(232,255,0,0.4); }
+  .lap-pit { font-size: 9px; color: var(--accent2); letter-spacing: 1px; margin-top: 4px; text-transform: uppercase; }
+
+  /* Back button */
+  .back-btn {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 8px 16px;
+    cursor: pointer;
+    margin-bottom: 24px;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+
+  .back-btn:hover { border-color: var(--accent3); color: var(--accent3); }
+  .back-btn.visible { display: flex; }
+
+  /* Charts */
+  .charts-section { display: none; }
+
+  .chart-wrapper {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .chart-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* Sync panel */
+  .sync-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 32px;
+  }
+
+  .sync-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+  .input-group { display: flex; flex-direction: column; gap: 6px; }
+  .input-label { font-size: 10px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; }
+
+  .sync-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-bright);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 8px 12px;
+    width: 140px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .sync-input:focus { border-color: var(--accent3); }
+
+  .sync-btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 9px 20px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: opacity 0.15s;
+    font-weight: 700;
+    height: 37px;
+  }
+
+  .sync-btn:hover { opacity: 0.85; }
+  .sync-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .sync-status { font-size: 12px; color: var(--text-dim); margin-top: 10px; min-height: 20px; }
+  .sync-status.success { color: var(--accent); }
+  .sync-status.error { color: var(--accent2); }
+  .sync-status.loading { color: var(--accent3); }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text-dim); font-size: 12px; letter-spacing: 1px; }
+  .empty-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.3; }
+
+  .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent3);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: var(--bg3);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 12px 20px;
+    z-index: 1000;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s;
+    text-transform: uppercase;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Racing<span>/</span>Telemetry</div>
+  <div class="live-badge">
+    <div class="live-dot" id="liveIndicator"></div>
+    <span id="liveStatus">Connecting...</span>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-label">Drivers</div>
+    <div id="driversList"></div>
+  </aside>
+
+  <main class="main">
+
+    <!-- Sync -->
+    <div class="section-title">Sync</div>
+    <div class="sync-panel">
+      <div class="sync-row">
+        <div class="input-group">
+          <label class="input-label">Session Key</label>
+          <input class="sync-input" id="syncSessionKey" type="number" placeholder="e.g. 9161">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Driver Number</label>
+          <input class="sync-input" id="syncDriverNum" type="number" placeholder="e.g. 55">
+        </div>
+        <button class="sync-btn" id="syncBtn" onclick="triggerSync()">Sync Session</button>
+      </div>
+      <div class="sync-status" id="syncStatus"></div>
+    </div>
+
+    <!-- Leaderboard (home) -->
+    <div id="homeView">
+      <div class="section-title" id="leaderboardTitle">Leaderboard</div>
+      <div class="leaderboard" id="leaderboard"></div>
+    </div>
+
+    <!-- Driver view -->
+    <div id="driverView" style="display:none">
+
+      <!-- Driver hero — always visible in driver view -->
+      <div class="driver-hero visible" id="driverHero">
+        <div id="driverHeadshot"></div>
+        <div class="driver-hero-info">
+          <div class="driver-hero-number" id="heroNumber"></div>
+          <div class="driver-hero-name" id="heroName"></div>
+          <div class="driver-hero-team" id="heroTeam"></div>
+          <div class="driver-hero-stats">
+            <div class="hero-stat">
+              <div class="hero-stat-label">Sessions</div>
+              <div class="hero-stat-value" id="heroSessions">—</div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-label">Total Laps</div>
+              <div class="hero-stat-value" id="heroLaps">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sessions list -->
+      <div id="sessionsView">
+        <div class="section-title">Sessions</div>
+        <div class="sessions-list" id="sessionsList"></div>
+      </div>
+
+      <!-- Laps view -->
+      <div id="lapsView" style="display:none">
+        <button class="back-btn visible" onclick="showSessions()">← Back to Sessions</button>
+        <div class="section-title" id="lapsSessionTitle"></div>
+        <div class="laps-grid" id="lapsGrid"></div>
+      </div>
+
+      <!-- Charts view -->
+      <div id="chartsView" style="display:none">
+        <button class="back-btn visible" onclick="showLaps()">← Back to Laps</button>
+        <div class="section-title" id="chartLapTitle"></div>
+
+        <div class="chart-wrapper">
+          <div class="chart-title">Speed (km/h)</div>
+          <canvas id="speedChart" height="80"></canvas>
+        </div>
+        <div class="charts-grid">
+          <div class="chart-wrapper">
+            <div class="chart-title">Throttle vs Brake (%)</div>
+            <canvas id="throttleBrakeChart" height="120"></canvas>
+          </div>
+          <div class="chart-wrapper">
+            <div class="chart-title">Gear / RPM</div>
+            <canvas id="gearRpmChart" height="120"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let charts = {};
+let fastestLapId = null;
+let activeDriverId = null;
+let currentLaps = [];
+
+// ── Fetch helpers ──────────────────────────────────────────
+async function get(path) {
+  const res = await fetch(`${API}${path}`);
+  if (!res.ok) return null;
+  return res.json();
+}
+
+async function post(path) {
+  return fetch(`${API}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+}
+
+// ── Views ──────────────────────────────────────────────────
+function showHome() {
+  document.getElementById('homeView').style.display = 'block';
+  document.getElementById('driverView').style.display = 'none';
+  activeDriverId = null;
+  loadDriversSidebar();
+}
+
+function showDriverView() {
+  document.getElementById('homeView').style.display = 'none';
+  document.getElementById('driverView').style.display = 'block';
+  document.getElementById('sessionsView').style.display = 'block';
+  document.getElementById('lapsView').style.display = 'none';
+  document.getElementById('chartsView').style.display = 'none';
+}
+
+function showSessions() {
+  document.getElementById('sessionsView').style.display = 'block';
+  document.getElementById('lapsView').style.display = 'none';
+  document.getElementById('chartsView').style.display = 'none';
+}
+
+function showLaps() {
+  document.getElementById('lapsView').style.display = 'block';
+  document.getElementById('chartsView').style.display = 'none';
+}
+
+function showCharts() {
+  document.getElementById('lapsView').style.display = 'none';
+  document.getElementById('chartsView').style.display = 'block';
+}
+
+// ── Leaderboard ────────────────────────────────────────────
+async function loadLeaderboard() {
+  const data = await get('/leaderboard');
+  const el = document.getElementById('leaderboard');
+  if (!data || data.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🏁</div>No data yet. Sync a session to get started.</div>';
+    return;
+  }
+  el.innerHTML = data.map((entry, i) => `
+    <div class="lb-row">
+      <div class="lb-pos">${i + 1}</div>
+      <div class="lb-num">${i === 0 ? '★' : ''}</div>
+      <div>
+        <div class="lb-name">${entry.driverName}</div>
+        <div class="lb-team">${entry.team}</div>
+      </div>
+      <div class="lb-circuit">${entry.circuit}</div>
+      <div class="lb-time">${formatTime(entry.lapTime)}</div>
+      <div class="lb-lap">LAP ${entry.lapNumber}</div>
+    </div>
+  `).join('');
+}
+
+// ── Drivers sidebar ────────────────────────────────────────
+async function loadDriversSidebar() {
+  const drivers = await get('/drivers');
+  const el = document.getElementById('driversList');
+  if (!drivers || drivers.length === 0) {
+    el.innerHTML = '<div style="padding:10px 20px;font-size:11px;color:var(--text-dim)">No drivers synced</div>';
+    return;
+  }
+  el.innerHTML = drivers.map(d => `
+    <div class="sidebar-item ${activeDriverId === d.id ? 'active' : ''}" onclick="selectDriver(${d.id}, '${d.name}', '${d.team}', ${d.driverNumber}, '${d.headshot || ''}')">
+      <div class="driver-num">#${d.driverNumber}</div>
+      <div class="driver-info">
+        <div class="driver-name">${d.name}</div>
+        <div class="driver-team">${d.team}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Select driver ──────────────────────────────────────────
+async function selectDriver(id, name, team, number, headshot) {
+  activeDriverId = id;
+  showDriverView();
+  loadDriversSidebar();
+
+  // Headshot
+  const hsEl = document.getElementById('driverHeadshot');
+  if (headshot && headshot !== 'null' && headshot !== '') {
+    hsEl.innerHTML = `<img class="driver-headshot" src="${headshot}" onerror="this.parentElement.innerHTML='<div class=\'driver-headshot-placeholder\'>#${number}</div>'" />`;
+  } else {
+    hsEl.innerHTML = `<div class="driver-headshot-placeholder">#${number}</div>`;
+  }
+
+  document.getElementById('heroNumber').textContent = `Driver #${number}`;
+  document.getElementById('heroName').textContent = name;
+  document.getElementById('heroTeam').textContent = team;
+  document.getElementById('heroSessions').textContent = '...';
+  document.getElementById('heroLaps').textContent = '...';
+
+  // Load sessions
+  const sessions = await get(`/drivers/${id}/sessions`);
+  if (!sessions || sessions.length === 0) {
+    document.getElementById('sessionsList').innerHTML = '<div class="empty-state">No sessions found for this driver</div>';
+    document.getElementById('heroSessions').textContent = '0';
+    document.getElementById('heroLaps').textContent = '0';
+    return;
+  }
+
+  document.getElementById('heroSessions').textContent = sessions.length;
+
+  // Load lap counts for each session
+  let totalLaps = 0;
+  const sessionData = await Promise.all(sessions.map(async s => {
+    const laps = await get(`/sessions/${s.id}/laps`);
+    const count = laps ? laps.length : 0;
+    totalLaps += count;
+    return { ...s, lapCount: count, laps };
+  }));
+
+  document.getElementById('heroLaps').textContent = totalLaps;
+
+  document.getElementById('sessionsList').innerHTML = sessionData.map(s => `
+    <div class="session-row" id="sessionRow${s.id}" onclick="selectSession(${s.id}, '${s.circuit}', '${s.country}', '${s.date}', ${s.lapCount})">
+      <div>
+        <div class="session-circuit-name">${s.circuit}</div>
+        <div class="session-country">${s.country}</div>
+      </div>
+      <div class="session-date-val">${formatDate(s.date)}</div>
+      <div class="session-laps-count">${s.lapCount} laps</div>
+    </div>
+  `).join('');
+}
+
+// ── Select session ─────────────────────────────────────────
+async function selectSession(sessionId, circuit, country, date, lapCount) {
+  document.querySelectorAll('.session-row').forEach(r => r.classList.remove('active'));
+  const row = document.getElementById(`sessionRow${sessionId}`);
+  if (row) row.classList.add('active');
+
+  document.getElementById('lapsSessionTitle').textContent = `${circuit} — ${country} · ${formatDate(date)}`;
+
+  const laps = await get(`/sessions/${sessionId}/laps`);
+  if (!laps || laps.length === 0) {
+    document.getElementById('lapsGrid').innerHTML = '<div class="empty-state">No laps found</div>';
+    showLaps();
+    return;
+  }
+
+  currentLaps = laps;
+  const fastest = laps.reduce((a, b) => a.lapTime < b.lapTime ? a : b);
+  fastestLapId = fastest.id;
+
+  document.getElementById('lapsGrid').innerHTML = laps.map(lap => `
+    <div class="lap-card ${lap.id === fastest.id ? 'fastest' : ''}" id="lapCard${lap.id}" onclick="onLapClick(${lap.id}, ${lap.lapNumber})">
+      <div class="lap-num">LAP ${lap.lapNumber}</div>
+      <div class="lap-time">${formatTime(lap.lapTime)}</div>
+      ${lap.isPitOutLap ? '<div class="lap-pit">pit out</div>' : ''}
+      <div class="lap-sectors">
+        <div class="sector"></div>
+        <div class="sector"></div>
+        <div class="sector"></div>
+      </div>
+    </div>
+  `).join('');
+
+  showLaps();
+}
+
+// ── Lap click ──────────────────────────────────────────────
+async function onLapClick(lapId, lapNumber) {
+  document.querySelectorAll('.lap-card').forEach(c => c.classList.remove('selected'));
+  const card = document.getElementById(`lapCard${lapId}`);
+  if (card) card.classList.add('selected');
+
+  document.getElementById('chartLapTitle').textContent = `Lap ${lapNumber} Telemetry${lapId === fastestLapId ? ' — Fastest Lap' : ''}`;
+  showCharts();
+  await loadTelemetry(lapId, lapId === fastestLapId);
+}
+
+// ── Telemetry ──────────────────────────────────────────────
+async function loadTelemetry(lapId, isFastest) {
+  const points = await get(`/laps/${lapId}/telemetry`);
+
+  if (!points || points.length === 0) {
+    document.getElementById('chartsView').innerHTML += '<div class="empty-state">No telemetry data for this lap</div>';
+    return;
+  }
+
+  points.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  const labels = points.map((_, i) => i);
+  const color = isFastest ? '#e8ff00' : '#00d4ff';
+
+  renderSpeedChart(labels, points, color);
+  renderThrottleBrakeChart(labels, points);
+  renderGearRpmChart(labels, points);
+}
+
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+function renderSpeedChart(labels, points, color) {
+  destroyChart('speed');
+  const ctx = document.getElementById('speedChart').getContext('2d');
+  charts['speed'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{ data: points.map(p => p.speed), borderColor: color, backgroundColor: color + '18', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3 }]
+    },
+    options: chartOptions(0, 400)
+  });
+}
+
+function renderThrottleBrakeChart(labels, points) {
+  destroyChart('throttle');
+  const ctx = document.getElementById('throttleBrakeChart').getContext('2d');
+  charts['throttle'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Throttle', data: points.map(p => p.throttlePercentage), borderColor: '#e8ff00', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 },
+        { label: 'Brake', data: points.map(p => p.brakePercentage), borderColor: '#ff3c3c', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 }
+      ]
+    },
+    options: { ...chartOptions(0, 110), plugins: { legend: { display: true, labels: { color: '#4a5568', font: { family: 'DM Mono', size: 10 }, boxWidth: 12 } } } }
+  });
+}
+
+function renderGearRpmChart(labels, points) {
+  destroyChart('gearrpm');
+  const ctx = document.getElementById('gearRpmChart').getContext('2d');
+  charts['gearrpm'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Gear', data: points.map(p => p.gear), borderColor: '#00d4ff', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.1, yAxisID: 'y' },
+        { label: 'RPM (÷1000)', data: points.map(p => p.rpm / 1000), borderColor: '#a855f7', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.3, yAxisID: 'y2' }
+      ]
+    },
+    options: {
+      responsive: true,
+      animation: { duration: 400 },
+      plugins: { legend: { display: true, labels: { color: '#4a5568', font: { family: 'DM Mono', size: 10 }, boxWidth: 12 } } },
+      scales: {
+        x: { display: false },
+        y: { position: 'left', min: 0, max: 9, grid: { color: '#1e2736' }, ticks: { color: '#4a5568', font: { family: 'DM Mono', size: 9 }, stepSize: 1 } },
+        y2: { position: 'right', min: 0, max: 15, grid: { display: false }, ticks: { color: '#4a5568', font: { family: 'DM Mono', size: 9 } } }
+      }
+    }
+  });
+}
+
+function chartOptions(min, max) {
+  return {
+    responsive: true,
+    animation: { duration: 400 },
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { display: false },
+      y: { min, max, grid: { color: '#1e2736' }, ticks: { color: '#4a5568', font: { family: 'DM Mono', size: 9 } } }
+    }
+  };
+}
+
+// ── Sync ───────────────────────────────────────────────────
+async function triggerSync() {
+  const sessionKey = document.getElementById('syncSessionKey').value;
+  const driverNum = document.getElementById('syncDriverNum').value;
+  if (!sessionKey || !driverNum) return;
+
+  const btn = document.getElementById('syncBtn');
+  const status = document.getElementById('syncStatus');
+  btn.disabled = true;
+  status.className = 'sync-status loading';
+  status.innerHTML = '<span class="spinner"></span>Syncing session...';
+
+  const res = await post(`/sync/session/${sessionKey}/${driverNum}`);
+  if (res.ok) {
+    status.className = 'sync-status success';
+    status.textContent = `✓ Session ${sessionKey} synced successfully`;
+    await loadDriversSidebar();
+    await loadLeaderboard();
+    if (activeDriverId) {
+      const d = await get(`/drivers/${activeDriverId}`);
+      if (d) selectDriver(d.id, d.name, d.team, d.driverNumber, d.headshot);
+    }
+  } else {
+    const err = await res.json().catch(() => ({}));
+    status.className = 'sync-status error';
+    status.textContent = `✗ ${err.message || 'Sync failed'}`;
+  }
+  btn.disabled = false;
+}
+
+// ── SignalR ────────────────────────────────────────────────
+function connectSignalR() {
+  const connection = new signalR.HubConnectionBuilder()
+    .withUrl(`${API}/hubs/leaderboard`)
+    .withAutomaticReconnect()
+    .build();
+
+  connection.on('LeaderboardUpdated', async () => {
+    await loadLeaderboard();
+    showToast('Leaderboard updated');
+  });
+
+  connection.onreconnecting(() => { document.getElementById('liveStatus').textContent = 'Reconnecting...'; });
+  connection.onreconnected(() => { document.getElementById('liveStatus').textContent = 'Live'; });
+
+  connection.start()
+    .then(() => {
+      document.getElementById('liveStatus').textContent = 'Live';
+      document.getElementById('liveIndicator').style.background = 'var(--accent)';
+    })
+    .catch(() => {
+      document.getElementById('liveStatus').textContent = 'Disconnected';
+      document.getElementById('liveIndicator').style.background = 'var(--accent2)';
+    });
+}
+
+// ── Toast ──────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Helpers ────────────────────────────────────────────────
+function formatTime(seconds) {
+  if (!seconds) return '--:--.---';
+  const m = Math.floor(seconds / 60);
+  const s = (seconds % 60).toFixed(3).padStart(6, '0');
+  return `${m}:${s}`;
+}
+
+function formatDate(iso) {
+  return new Date(iso).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+// ── Init ───────────────────────────────────────────────────
+async function init() {
+  await loadLeaderboard();
+  await loadDriversSidebar();
+  connectSignalR();
+}
+
+init();
+</script>
+</body>
+</html>
