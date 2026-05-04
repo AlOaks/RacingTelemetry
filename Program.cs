@@ -18,7 +18,6 @@ builder.Services.AddNpgsql<AppDbContext>(builder.Configuration.GetConnectionStri
 builder.Services.AddSingleton<MongoDbContext>();
 builder.Services.AddSingleton<TokenService>();
 builder.Services.AddHttpClient<OpenF1Service>();
-builder.Services.AddMemoryCache();
 builder.Services.AddSignalR();
 builder.Services.AddCors(options =>
 {
@@ -79,12 +78,11 @@ app.UseExceptionHandler(errorApp =>
 });
 
 app.MapFallbackToFile("index.html");
-app.MapHub<LeaderboardHub>("/hubs/leaderboard");
+app.MapHub<SessionHub>("/hubs/sessions");
 app.MapAuthRoutes();
 app.MapDriverRoutes();
 app.MapSessionRoutes();
 app.MapLapRoutes();
 app.MapSyncRoutes();
-app.MapLeaderboardRoutes();
 
 app.Run();

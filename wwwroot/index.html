@@ -63,6 +63,7 @@
     letter-spacing: 4px;
     color: var(--accent);
     text-transform: uppercase;
+    cursor: pointer;
   }
 
   .logo span { color: var(--text-dim); }
@@ -80,9 +81,11 @@
   .live-dot {
     width: 8px; height: 8px;
     border-radius: 50%;
-    background: var(--accent);
+    background: var(--accent2);
     animation: pulse 1.5s infinite;
   }
+
+  .live-dot.connected { background: var(--accent); }
 
   @keyframes pulse {
     0%, 100% { opacity: 1; transform: scale(1); }
@@ -97,7 +100,6 @@
     min-height: calc(100vh - 64px);
   }
 
-  /* Sidebar */
   .sidebar {
     border-right: 1px solid var(--border);
     padding: 24px 0;
@@ -145,14 +147,10 @@
   }
 
   .driver-info { flex: 1; }
-  .driver-name { font-size: 13px; line-height: 1.2; }
-  .driver-team { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+  .driver-name-sm { font-size: 13px; line-height: 1.2; }
+  .driver-team-sm { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
 
-  /* Main */
-  .main {
-    padding: 32px 40px;
-    overflow-y: auto;
-  }
+  .main { padding: 32px 40px; overflow-y: auto; }
 
   .section-title {
     font-family: 'Orbitron', monospace;
@@ -166,63 +164,170 @@
     gap: 12px;
   }
 
-  .section-title::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-  /* Leaderboard */
-  .leaderboard {
+  /* Breadcrumb */
+  .breadcrumb {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 40px;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 28px;
+    letter-spacing: 1px;
   }
 
-  .lb-row {
-    display: grid;
-    grid-template-columns: 40px 40px 1fr 120px 100px 100px;
+  .breadcrumb-item {
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+
+  .breadcrumb-item:hover { color: var(--accent3); }
+  .breadcrumb-sep { color: var(--border); }
+  .breadcrumb-current { color: var(--text); cursor: default; }
+
+  /* Back button */
+  .back-btn {
+    display: none;
     align-items: center;
-    gap: 16px;
-    padding: 12px 16px;
+    gap: 8px;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 8px 16px;
+    cursor: pointer;
+    margin-bottom: 24px;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+
+  .back-btn:hover { border-color: var(--accent3); color: var(--accent3); }
+  .back-btn.visible { display: flex; }
+
+  /* Sessions grid (home) */
+  .sessions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 8px;
+    margin-bottom: 32px;
+  }
+
+  .session-card {
     background: var(--card);
     border: 1px solid var(--border);
-    transition: all 0.2s;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+    position: relative;
   }
 
-  .lb-row:first-child {
-    border-color: rgba(232,255,0,0.3);
-    background: rgba(232,255,0,0.04);
+  .session-card:hover {
+    border-left-color: var(--accent3);
+    background: rgba(0,212,255,0.04);
+  }
+
+  .session-card-circuit {
+    font-family: 'Orbitron', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 6px;
+  }
+
+  .session-card-country { font-size: 11px; color: var(--text-dim); margin-bottom: 12px; }
+
+  .session-card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .session-card-date { font-size: 11px; color: var(--text-dim); }
+  .session-card-drivers {
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    color: var(--accent3);
+    letter-spacing: 1px;
+  }
+
+  /* Session leaderboard */
+  .lb-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 32px;
+  }
+
+  .lb-table th {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    text-align: left;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 400;
+  }
+
+  .lb-table th:last-child, .lb-table td:last-child { text-align: right; }
+
+  .lb-table tr.lb-data-row {
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .lb-table tr.lb-data-row:hover { background: rgba(255,255,255,0.02); }
+  .lb-table tr.lb-data-row:first-child td { color: var(--accent); }
+
+  .lb-table td {
+    padding: 14px 16px;
+    font-size: 13px;
   }
 
   .lb-pos {
     font-family: 'Orbitron', monospace;
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-dim);
-    text-align: center;
+    width: 40px;
   }
 
-  .lb-row:first-child .lb-pos { color: var(--accent); }
-  .lb-num { font-family: 'Orbitron', monospace; font-size: 11px; color: var(--accent); text-align: center; }
-  .lb-name { font-size: 13px; color: var(--text-bright); }
-  .lb-team { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
-  .lb-circuit { font-size: 12px; color: var(--text-dim); }
-  .lb-time { font-family: 'Orbitron', monospace; font-size: 13px; color: var(--accent); text-align: right; }
-  .lb-lap { font-size: 11px; color: var(--text-dim); text-align: right; }
+  .lb-table tr.lb-data-row:first-child .lb-pos { color: var(--accent); }
+
+  .lb-driver-num {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    width: 50px;
+  }
+
+  .lb-driver-name { font-size: 13px; color: var(--text-bright); }
+  .lb-driver-team { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+  .lb-laptime {
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    color: var(--accent);
+    text-align: right;
+  }
+
+  .lb-table tr.lb-data-row:not(:first-child) .lb-laptime { color: var(--text); }
+  .lb-lapnum { font-size: 11px; color: var(--text-dim); text-align: right; }
 
   /* Driver hero */
   .driver-hero {
-    display: none;
-    margin-bottom: 36px;
+    display: flex;
+    gap: 28px;
+    align-items: flex-start;
+    margin-bottom: 32px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
   }
 
-  .driver-hero.visible { display: flex; gap: 32px; align-items: flex-start; }
-
   .driver-headshot {
-    width: 120px;
-    height: 120px;
+    width: 100px; height: 100px;
     object-fit: cover;
     border: 2px solid var(--border);
     background: var(--card);
@@ -230,109 +335,43 @@
   }
 
   .driver-headshot-placeholder {
-    width: 120px;
-    height: 120px;
+    width: 100px; height: 100px;
     background: var(--card);
     border: 2px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'Orbitron', monospace;
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 900;
     color: var(--accent);
     flex-shrink: 0;
   }
 
-  .driver-hero-info { flex: 1; }
-
   .driver-hero-number {
     font-family: 'Orbitron', monospace;
-    font-size: 11px;
+    font-size: 10px;
     letter-spacing: 4px;
     color: var(--text-dim);
     text-transform: uppercase;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
   }
 
   .driver-hero-name {
     font-family: 'Orbitron', monospace;
-    font-size: 36px;
+    font-size: 28px;
     font-weight: 900;
     color: var(--text-bright);
     line-height: 1;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
   }
 
-  .driver-hero-team {
-    font-size: 13px;
-    color: var(--text-dim);
-    margin-bottom: 16px;
-  }
+  .driver-hero-team { font-size: 12px; color: var(--text-dim); }
 
-  .driver-hero-stats {
-    display: flex;
-    gap: 24px;
-  }
-
-  .hero-stat { }
-  .hero-stat-label { font-size: 9px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; }
-  .hero-stat-value { font-family: 'Orbitron', monospace; font-size: 18px; color: var(--accent); margin-top: 2px; }
-
-  /* Sessions for driver */
-  .sessions-list {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 32px;
-  }
-
-  .session-row {
-    display: grid;
-    grid-template-columns: 1fr 160px 80px;
-    align-items: center;
-    gap: 16px;
-    padding: 14px 20px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    cursor: pointer;
-    transition: all 0.15s;
-    border-left: 3px solid transparent;
-  }
-
-  .session-row:hover {
-    border-left-color: var(--accent3);
-    background: rgba(0,212,255,0.04);
-  }
-
-  .session-row.active {
-    border-left-color: var(--accent3);
-    background: rgba(0,212,255,0.06);
-  }
-
-  .session-circuit-name {
-    font-size: 14px;
-    color: var(--text-bright);
-  }
-
-  .session-country {
-    font-size: 10px;
-    color: var(--text-dim);
-    margin-top: 3px;
-  }
-
-  .session-date-val { font-size: 12px; color: var(--text-dim); text-align: right; }
-  .session-laps-count {
-    font-family: 'Orbitron', monospace;
-    font-size: 11px;
-    color: var(--accent3);
-    text-align: right;
-  }
-
-  /* Lap cards */
+  /* Laps grid */
   .laps-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 8px;
     margin-bottom: 32px;
   }
@@ -365,38 +404,15 @@
   .lap-card.fastest.selected { border-color: var(--accent); background: rgba(232,255,0,0.06); }
 
   .lap-num { font-family: 'Orbitron', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 6px; }
-  .lap-time { font-family: 'Orbitron', monospace; font-size: 15px; color: var(--text-bright); margin-bottom: 4px; }
-  .lap-card.fastest .lap-time { color: var(--accent); }
-  .lap-card.selected:not(.fastest) .lap-time { color: var(--accent3); }
-  .lap-sectors { display: flex; gap: 4px; margin-top: 8px; }
+  .lap-time-val { font-family: 'Orbitron', monospace; font-size: 14px; color: var(--text-bright); }
+  .lap-card.fastest .lap-time-val { color: var(--accent); }
+  .lap-card.selected:not(.fastest) .lap-time-val { color: var(--accent3); }
+  .lap-sectors { display: flex; gap: 3px; margin-top: 8px; }
   .sector { flex: 1; height: 2px; background: var(--border); border-radius: 1px; }
   .lap-card.fastest .sector { background: rgba(232,255,0,0.4); }
   .lap-pit { font-size: 9px; color: var(--accent2); letter-spacing: 1px; margin-top: 4px; text-transform: uppercase; }
 
-  /* Back button */
-  .back-btn {
-    display: none;
-    align-items: center;
-    gap: 8px;
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 2px;
-    padding: 8px 16px;
-    cursor: pointer;
-    margin-bottom: 24px;
-    transition: all 0.15s;
-    text-transform: uppercase;
-  }
-
-  .back-btn:hover { border-color: var(--accent3); color: var(--accent3); }
-  .back-btn.visible { display: flex; }
-
   /* Charts */
-  .charts-section { display: none; }
-
   .chart-wrapper {
     background: var(--card);
     border: 1px solid var(--border);
@@ -415,7 +431,7 @@
 
   .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-  /* Sync panel */
+  /* Sync */
   .sync-panel {
     background: var(--card);
     border: 1px solid var(--border);
@@ -451,9 +467,9 @@
     padding: 9px 20px;
     cursor: pointer;
     text-transform: uppercase;
-    transition: opacity 0.15s;
     font-weight: 700;
     height: 37px;
+    transition: opacity 0.15s;
   }
 
   .sync-btn:hover { opacity: 0.85; }
@@ -482,11 +498,10 @@
 
   .toast {
     position: fixed;
-    bottom: 32px;
-    right: 32px;
+    bottom: 32px; right: 32px;
     background: var(--bg3);
-    border: 1px solid var(--accent);
-    color: var(--accent);
+    border: 1px solid var(--accent3);
+    color: var(--accent3);
     font-family: 'Orbitron', monospace;
     font-size: 11px;
     letter-spacing: 2px;
@@ -508,14 +523,15 @@
 <body>
 
 <header>
-  <div class="logo">Racing<span>/</span>Telemetry</div>
+  <div class="logo" onclick="goHome()">Racing<span>/</span>Telemetry</div>
   <div class="live-badge">
-    <div class="live-dot" id="liveIndicator"></div>
+    <div class="live-dot" id="liveDot"></div>
     <span id="liveStatus">Connecting...</span>
   </div>
 </header>
 
 <div class="layout">
+  <!-- Sidebar: drivers -->
   <aside class="sidebar">
     <div class="sidebar-label">Drivers</div>
     <div id="driversList"></div>
@@ -523,7 +539,7 @@
 
   <main class="main">
 
-    <!-- Sync -->
+    <!-- Sync panel (always visible) -->
     <div class="section-title">Sync</div>
     <div class="sync-panel">
       <div class="sync-row">
@@ -540,69 +556,56 @@
       <div class="sync-status" id="syncStatus"></div>
     </div>
 
-    <!-- Leaderboard (home) -->
+    <!-- HOME: Sessions list -->
     <div id="homeView">
-      <div class="section-title" id="leaderboardTitle">Leaderboard</div>
-      <div class="leaderboard" id="leaderboard"></div>
+      <div class="section-title">Sessions</div>
+      <div class="sessions-grid" id="sessionsGrid"></div>
     </div>
 
-    <!-- Driver view -->
-    <div id="driverView" style="display:none">
+    <!-- SESSION: Leaderboard -->
+    <div id="sessionView" style="display:none">
+      <div class="breadcrumb" id="sessionBreadcrumb"></div>
+      <div class="section-title" id="sessionViewTitle"></div>
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th>Pos</th>
+            <th>#</th>
+            <th>Driver</th>
+            <th>Lap</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboardBody"></tbody>
+      </table>
+    </div>
 
-      <!-- Driver hero — always visible in driver view -->
-      <div class="driver-hero visible" id="driverHero">
-        <div id="driverHeadshot"></div>
-        <div class="driver-hero-info">
-          <div class="driver-hero-number" id="heroNumber"></div>
-          <div class="driver-hero-name" id="heroName"></div>
-          <div class="driver-hero-team" id="heroTeam"></div>
-          <div class="driver-hero-stats">
-            <div class="hero-stat">
-              <div class="hero-stat-label">Sessions</div>
-              <div class="hero-stat-value" id="heroSessions">—</div>
-            </div>
-            <div class="hero-stat">
-              <div class="hero-stat-label">Total Laps</div>
-              <div class="hero-stat-value" id="heroLaps">—</div>
-            </div>
-          </div>
-        </div>
+    <!-- DRIVER LAPS: Laps for a driver in a session -->
+    <div id="lapsView" style="display:none">
+      <div class="breadcrumb" id="lapsBreadcrumb"></div>
+      <div class="driver-hero" id="driverHero"></div>
+      <div class="section-title">Laps</div>
+      <div class="laps-grid" id="lapsGrid"></div>
+    </div>
+
+    <!-- TELEMETRY: Charts for a lap -->
+    <div id="telemetryView" style="display:none">
+      <div class="breadcrumb" id="telemetryBreadcrumb"></div>
+      <div class="section-title" id="telemetryTitle"></div>
+      <div class="chart-wrapper">
+        <div class="chart-title">Speed (km/h)</div>
+        <canvas id="speedChart" height="80"></canvas>
       </div>
-
-      <!-- Sessions list -->
-      <div id="sessionsView">
-        <div class="section-title">Sessions</div>
-        <div class="sessions-list" id="sessionsList"></div>
-      </div>
-
-      <!-- Laps view -->
-      <div id="lapsView" style="display:none">
-        <button class="back-btn visible" onclick="showSessions()">← Back to Sessions</button>
-        <div class="section-title" id="lapsSessionTitle"></div>
-        <div class="laps-grid" id="lapsGrid"></div>
-      </div>
-
-      <!-- Charts view -->
-      <div id="chartsView" style="display:none">
-        <button class="back-btn visible" onclick="showLaps()">← Back to Laps</button>
-        <div class="section-title" id="chartLapTitle"></div>
-
+      <div class="charts-grid">
         <div class="chart-wrapper">
-          <div class="chart-title">Speed (km/h)</div>
-          <canvas id="speedChart" height="80"></canvas>
+          <div class="chart-title">Throttle vs Brake (%)</div>
+          <canvas id="throttleBrakeChart" height="120"></canvas>
         </div>
-        <div class="charts-grid">
-          <div class="chart-wrapper">
-            <div class="chart-title">Throttle vs Brake (%)</div>
-            <canvas id="throttleBrakeChart" height="120"></canvas>
-          </div>
-          <div class="chart-wrapper">
-            <div class="chart-title">Gear / RPM</div>
-            <canvas id="gearRpmChart" height="120"></canvas>
-          </div>
+        <div class="chart-wrapper">
+          <div class="chart-title">Gear / RPM</div>
+          <canvas id="gearRpmChart" height="120"></canvas>
         </div>
       </div>
-
     </div>
 
   </main>
@@ -613,11 +616,16 @@
 <script>
 const API = '';
 let charts = {};
-let fastestLapId = null;
-let activeDriverId = null;
-let currentLaps = [];
+let state = {
+  sessions: [],
+  drivers: [],
+  currentSession: null,
+  currentDriver: null,
+  currentLaps: [],
+  fastestLapId: null,
+};
 
-// ── Fetch helpers ──────────────────────────────────────────
+// ── Fetch ──────────────────────────────────────────────────
 async function get(path) {
   const res = await fetch(`${API}${path}`);
   if (!res.ok) return null;
@@ -629,185 +637,173 @@ async function post(path) {
 }
 
 // ── Views ──────────────────────────────────────────────────
-function showHome() {
-  document.getElementById('homeView').style.display = 'block';
-  document.getElementById('driverView').style.display = 'none';
-  activeDriverId = null;
+function showOnly(id) {
+  ['homeView', 'sessionView', 'lapsView', 'telemetryView'].forEach(v => {
+    document.getElementById(v).style.display = v === id ? 'block' : 'none';
+  });
+}
+
+function goHome() {
+  showOnly('homeView');
+  state.currentSession = null;
+  state.currentDriver = null;
   loadDriversSidebar();
 }
 
-function showDriverView() {
-  document.getElementById('homeView').style.display = 'none';
-  document.getElementById('driverView').style.display = 'block';
-  document.getElementById('sessionsView').style.display = 'block';
-  document.getElementById('lapsView').style.display = 'none';
-  document.getElementById('chartsView').style.display = 'none';
+// ── Breadcrumb ─────────────────────────────────────────────
+function breadcrumb(elId, items) {
+  // items: [{label, onClick}] last item has no onClick (current)
+  const el = document.getElementById(elId);
+  el.innerHTML = items.map((item, i) => {
+    const isLast = i === items.length - 1;
+    if (isLast) return `<span class="breadcrumb-current">${item.label}</span>`;
+    return `<span class="breadcrumb-item" onclick="${item.fn}">${item.label}</span><span class="breadcrumb-sep">›</span>`;
+  }).join('');
 }
 
-function showSessions() {
-  document.getElementById('sessionsView').style.display = 'block';
-  document.getElementById('lapsView').style.display = 'none';
-  document.getElementById('chartsView').style.display = 'none';
-}
+// ── Home: Sessions ─────────────────────────────────────────
+async function loadHome() {
+  const sessions = await get('/sessions');
+  state.sessions = sessions || [];
+  const el = document.getElementById('sessionsGrid');
 
-function showLaps() {
-  document.getElementById('lapsView').style.display = 'block';
-  document.getElementById('chartsView').style.display = 'none';
-}
-
-function showCharts() {
-  document.getElementById('lapsView').style.display = 'none';
-  document.getElementById('chartsView').style.display = 'block';
-}
-
-// ── Leaderboard ────────────────────────────────────────────
-async function loadLeaderboard() {
-  const data = await get('/leaderboard');
-  const el = document.getElementById('leaderboard');
-  if (!data || data.length === 0) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🏁</div>No data yet. Sync a session to get started.</div>';
-    return;
-  }
-  el.innerHTML = data.map((entry, i) => `
-    <div class="lb-row">
-      <div class="lb-pos">${i + 1}</div>
-      <div class="lb-num">${i === 0 ? '★' : ''}</div>
-      <div>
-        <div class="lb-name">${entry.driverName}</div>
-        <div class="lb-team">${entry.team}</div>
-      </div>
-      <div class="lb-circuit">${entry.circuit}</div>
-      <div class="lb-time">${formatTime(entry.lapTime)}</div>
-      <div class="lb-lap">LAP ${entry.lapNumber}</div>
-    </div>
-  `).join('');
-}
-
-// ── Drivers sidebar ────────────────────────────────────────
-async function loadDriversSidebar() {
-  const drivers = await get('/drivers');
-  const el = document.getElementById('driversList');
-  if (!drivers || drivers.length === 0) {
-    el.innerHTML = '<div style="padding:10px 20px;font-size:11px;color:var(--text-dim)">No drivers synced</div>';
-    return;
-  }
-  el.innerHTML = drivers.map(d => `
-    <div class="sidebar-item ${activeDriverId === d.id ? 'active' : ''}" onclick="selectDriver(${d.id}, '${d.name}', '${d.team}', ${d.driverNumber}, '${d.headshot || ''}')">
-      <div class="driver-num">#${d.driverNumber}</div>
-      <div class="driver-info">
-        <div class="driver-name">${d.name}</div>
-        <div class="driver-team">${d.team}</div>
-      </div>
-    </div>
-  `).join('');
-}
-
-// ── Select driver ──────────────────────────────────────────
-async function selectDriver(id, name, team, number, headshot) {
-  activeDriverId = id;
-  showDriverView();
-  loadDriversSidebar();
-
-  // Headshot
-  const hsEl = document.getElementById('driverHeadshot');
-  if (headshot && headshot !== 'null' && headshot !== '') {
-    hsEl.innerHTML = `<img class="driver-headshot" src="${headshot}" onerror="this.parentElement.innerHTML='<div class=\'driver-headshot-placeholder\'>#${number}</div>'" />`;
-  } else {
-    hsEl.innerHTML = `<div class="driver-headshot-placeholder">#${number}</div>`;
-  }
-
-  document.getElementById('heroNumber').textContent = `Driver #${number}`;
-  document.getElementById('heroName').textContent = name;
-  document.getElementById('heroTeam').textContent = team;
-  document.getElementById('heroSessions').textContent = '...';
-  document.getElementById('heroLaps').textContent = '...';
-
-  // Load sessions
-  const sessions = await get(`/drivers/${id}/sessions`);
-  if (!sessions || sessions.length === 0) {
-    document.getElementById('sessionsList').innerHTML = '<div class="empty-state">No sessions found for this driver</div>';
-    document.getElementById('heroSessions').textContent = '0';
-    document.getElementById('heroLaps').textContent = '0';
+  if (!state.sessions.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🏁</div>No sessions yet. Sync a session to get started.</div>';
     return;
   }
 
-  document.getElementById('heroSessions').textContent = sessions.length;
-
-  // Load lap counts for each session
-  let totalLaps = 0;
-  const sessionData = await Promise.all(sessions.map(async s => {
-    const laps = await get(`/sessions/${s.id}/laps`);
-    const count = laps ? laps.length : 0;
-    totalLaps += count;
-    return { ...s, lapCount: count, laps };
+  // Get driver count per session
+  const enriched = await Promise.all(state.sessions.map(async s => {
+    const ds = await get(`/sessions/${s.id}/leaderboard`);
+    return { ...s, driverCount: ds ? ds.length : 0 };
   }));
 
-  document.getElementById('heroLaps').textContent = totalLaps;
-
-  document.getElementById('sessionsList').innerHTML = sessionData.map(s => `
-    <div class="session-row" id="sessionRow${s.id}" onclick="selectSession(${s.id}, '${s.circuit}', '${s.country}', '${s.date}', ${s.lapCount})">
-      <div>
-        <div class="session-circuit-name">${s.circuit}</div>
-        <div class="session-country">${s.country}</div>
+  el.innerHTML = enriched.map(s => `
+    <div class="session-card" onclick="openSession(${s.id}, '${s.circuit}', '${s.country}', '${s.date}')">
+      <div class="session-card-circuit">${s.circuit} - ${s.sessionName}</div>
+      <div class="session-card-country">${s.country}</div>
+      <div class="session-card-meta">
+        <div class="session-card-date">${formatDate(s.date)}</div>
+        <div class="session-card-drivers">${s.driverCount} drivers</div>
       </div>
-      <div class="session-date-val">${formatDate(s.date)}</div>
-      <div class="session-laps-count">${s.lapCount} laps</div>
     </div>
   `).join('');
 }
 
-// ── Select session ─────────────────────────────────────────
-async function selectSession(sessionId, circuit, country, date, lapCount) {
-  document.querySelectorAll('.session-row').forEach(r => r.classList.remove('active'));
-  const row = document.getElementById(`sessionRow${sessionId}`);
-  if (row) row.classList.add('active');
+// ── Session: Leaderboard ───────────────────────────────────
+async function openSession(id, circuit, country, date) {
+  state.currentSession = { id, circuit, country, date };
+  showOnly('sessionView');
 
-  document.getElementById('lapsSessionTitle').textContent = `${circuit} — ${country} · ${formatDate(date)}`;
+  breadcrumb('sessionBreadcrumb', [
+    { label: 'Sessions', fn: 'goHome()' },
+    { label: `${circuit} — ${country}` }
+  ]);
 
-  const laps = await get(`/sessions/${sessionId}/laps`);
-  if (!laps || laps.length === 0) {
-    document.getElementById('lapsGrid').innerHTML = '<div class="empty-state">No laps found</div>';
-    showLaps();
+  document.getElementById('sessionViewTitle').textContent = `${circuit} · ${formatDate(date)}`;
+
+  const leaderboard = await get(`/sessions/${id}/leaderboard`);
+  const tbody = document.getElementById('leaderboardBody');
+
+  if (!leaderboard || leaderboard.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">No lap data for this session</div></td></tr>`;
     return;
   }
 
-  currentLaps = laps;
-  const fastest = laps.reduce((a, b) => a.lapTime < b.lapTime ? a : b);
-  fastestLapId = fastest.id;
+  tbody.innerHTML = leaderboard.map((entry, i) => `
+    <tr class="lb-data-row" onclick="openDriverLaps(${entry.driverId || 0}, '${entry.driverName}', '${entry.team}', ${entry.driverNumber}, '${entry.headshot || ''}', ${id})">
+      <td class="lb-pos">${i + 1}</td>
+      <td class="lb-driver-num">#${entry.driverNumber}</td>
+      <td>
+        <div class="lb-driver-name">${entry.driverName}</div>
+        <div class="lb-driver-team">${entry.team}</div>
+      </td>
+      <td class="lb-lapnum">LAP ${entry.lapNumber}</td>
+      <td class="lb-laptime">${formatTime(entry.lapTime)}</td>
+    </tr>
+  `).join('');
+}
 
-  document.getElementById('lapsGrid').innerHTML = laps.map(lap => `
-    <div class="lap-card ${lap.id === fastest.id ? 'fastest' : ''}" id="lapCard${lap.id}" onclick="onLapClick(${lap.id}, ${lap.lapNumber})">
+// ── Driver Laps ────────────────────────────────────────────
+async function openDriverLaps(driverId, name, team, number, headshot, sessionId) {
+  state.currentDriver = { id: driverId, name, team, number, headshot };
+  showOnly('lapsView');
+
+  const { circuit, country, date } = state.currentSession;
+
+  breadcrumb('lapsBreadcrumb', [
+    { label: 'Sessions', fn: 'goHome()' },
+    { label: `${circuit}`, fn: `openSession(${sessionId}, '${circuit}', '${country}', '${date}')` },
+    { label: name }
+  ]);
+
+  // Driver hero
+  const hsHtml = (headshot && headshot !== 'null' && headshot !== '')
+    ? `<img class="driver-headshot" src="${headshot}" onerror="this.outerHTML='<div class=\\'driver-headshot-placeholder\\'>#${number}</div>'">`
+    : `<div class="driver-headshot-placeholder">#${number}</div>`;
+
+  document.getElementById('driverHero').innerHTML = `
+    ${hsHtml}
+    <div>
+      <div class="driver-hero-number">Driver #${number}</div>
+      <div class="driver-hero-name">${name}</div>
+      <div class="driver-hero-team">${team}</div>
+    </div>
+  `;
+
+  // Laps
+  const laps = await get(`/sessions/${sessionId}/laps`);
+  const driverLaps = laps ? laps.filter(l => l.driverId === driverId) : [];
+  state.currentLaps = driverLaps;
+
+  console.log('filtering', driverId, typeof driverId, laps[0]?.driverId, typeof laps[0]?.driverId);
+
+  if (!driverLaps.length) {
+    document.getElementById('lapsGrid').innerHTML = '<div class="empty-state">No laps found</div>';
+    return;
+  }
+
+  const fastest = driverLaps.reduce((a, b) => a.lapTime < b.lapTime ? a : b);
+  state.fastestLapId = fastest.id;
+
+  document.getElementById('lapsGrid').innerHTML = driverLaps.map(lap => `
+    <div class="lap-card ${lap.id === fastest.id ? 'fastest' : ''}" id="lapCard${lap.id}"
+         onclick="openTelemetry(${lap.id}, ${lap.lapNumber}, ${lap.id === fastest.id})">
       <div class="lap-num">LAP ${lap.lapNumber}</div>
-      <div class="lap-time">${formatTime(lap.lapTime)}</div>
+      <div class="lap-time-val">${formatTime(lap.lapTime)}</div>
       ${lap.isPitOutLap ? '<div class="lap-pit">pit out</div>' : ''}
       <div class="lap-sectors">
-        <div class="sector"></div>
-        <div class="sector"></div>
-        <div class="sector"></div>
+        <div class="sector"></div><div class="sector"></div><div class="sector"></div>
       </div>
     </div>
   `).join('');
-
-  showLaps();
 }
 
-// ── Lap click ──────────────────────────────────────────────
-async function onLapClick(lapId, lapNumber) {
+// ── Telemetry ──────────────────────────────────────────────
+async function openTelemetry(lapId, lapNumber, isFastest) {
   document.querySelectorAll('.lap-card').forEach(c => c.classList.remove('selected'));
   const card = document.getElementById(`lapCard${lapId}`);
   if (card) card.classList.add('selected');
 
-  document.getElementById('chartLapTitle').textContent = `Lap ${lapNumber} Telemetry${lapId === fastestLapId ? ' — Fastest Lap' : ''}`;
-  showCharts();
-  await loadTelemetry(lapId, lapId === fastestLapId);
-}
+  showOnly('telemetryView');
 
-// ── Telemetry ──────────────────────────────────────────────
-async function loadTelemetry(lapId, isFastest) {
+  const { circuit, country, date } = state.currentSession;
+  const { name, number, id: driverId } = state.currentDriver;
+  const sessionId = state.currentSession.id;
+
+  breadcrumb('telemetryBreadcrumb', [
+    { label: 'Sessions', fn: 'goHome()' },
+    { label: circuit, fn: `openSession(${sessionId}, '${circuit}', '${country}', '${date}')` },
+    { label: name, fn: `openDriverLaps(${driverId}, '${name}', '${state.currentDriver.team}', ${number}, '${state.currentDriver.headshot}', ${sessionId})` },
+    { label: `Lap ${lapNumber}${isFastest ? ' ★' : ''}` }
+  ]);
+
+  document.getElementById('telemetryTitle').textContent = `Lap ${lapNumber}${isFastest ? ' — Fastest Lap' : ''}`;
+
   const points = await get(`/laps/${lapId}/telemetry`);
 
   if (!points || points.length === 0) {
-    document.getElementById('chartsView').innerHTML += '<div class="empty-state">No telemetry data for this lap</div>';
+    document.getElementById('telemetryView').innerHTML += '<div class="empty-state">No telemetry data for this lap</div>';
     return;
   }
 
@@ -820,6 +816,7 @@ async function loadTelemetry(lapId, isFastest) {
   renderGearRpmChart(labels, points);
 }
 
+// ── Charts ─────────────────────────────────────────────────
 function destroyChart(id) {
   if (charts[id]) { charts[id].destroy(); delete charts[id]; }
 }
@@ -829,10 +826,7 @@ function renderSpeedChart(labels, points, color) {
   const ctx = document.getElementById('speedChart').getContext('2d');
   charts['speed'] = new Chart(ctx, {
     type: 'line',
-    data: {
-      labels,
-      datasets: [{ data: points.map(p => p.speed), borderColor: color, backgroundColor: color + '18', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3 }]
-    },
+    data: { labels, datasets: [{ data: points.map(p => p.speed), borderColor: color, backgroundColor: color + '18', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3 }] },
     options: chartOptions(0, 400)
   });
 }
@@ -842,13 +836,10 @@ function renderThrottleBrakeChart(labels, points) {
   const ctx = document.getElementById('throttleBrakeChart').getContext('2d');
   charts['throttle'] = new Chart(ctx, {
     type: 'line',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Throttle', data: points.map(p => p.throttlePercentage), borderColor: '#e8ff00', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 },
-        { label: 'Brake', data: points.map(p => p.brakePercentage), borderColor: '#ff3c3c', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 }
-      ]
-    },
+    data: { labels, datasets: [
+      { label: 'Throttle', data: points.map(p => p.throttlePercentage), borderColor: '#e8ff00', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 },
+      { label: 'Brake', data: points.map(p => p.brakePercentage), borderColor: '#ff3c3c', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 }
+    ]},
     options: { ...chartOptions(0, 110), plugins: { legend: { display: true, labels: { color: '#4a5568', font: { family: 'DM Mono', size: 10 }, boxWidth: 12 } } } }
   });
 }
@@ -858,16 +849,12 @@ function renderGearRpmChart(labels, points) {
   const ctx = document.getElementById('gearRpmChart').getContext('2d');
   charts['gearrpm'] = new Chart(ctx, {
     type: 'line',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Gear', data: points.map(p => p.gear), borderColor: '#00d4ff', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.1, yAxisID: 'y' },
-        { label: 'RPM (÷1000)', data: points.map(p => p.rpm / 1000), borderColor: '#a855f7', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.3, yAxisID: 'y2' }
-      ]
-    },
+    data: { labels, datasets: [
+      { label: 'Gear', data: points.map(p => p.gear), borderColor: '#00d4ff', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.1, yAxisID: 'y' },
+      { label: 'RPM (÷1000)', data: points.map(p => p.rpm / 1000), borderColor: '#a855f7', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.3, yAxisID: 'y2' }
+    ]},
     options: {
-      responsive: true,
-      animation: { duration: 400 },
+      responsive: true, animation: { duration: 400 },
       plugins: { legend: { display: true, labels: { color: '#4a5568', font: { family: 'DM Mono', size: 10 }, boxWidth: 12 } } },
       scales: {
         x: { display: false },
@@ -880,14 +867,59 @@ function renderGearRpmChart(labels, points) {
 
 function chartOptions(min, max) {
   return {
-    responsive: true,
-    animation: { duration: 400 },
+    responsive: true, animation: { duration: 400 },
     plugins: { legend: { display: false } },
     scales: {
       x: { display: false },
       y: { min, max, grid: { color: '#1e2736' }, ticks: { color: '#4a5568', font: { family: 'DM Mono', size: 9 } } }
     }
   };
+}
+
+// ── Drivers sidebar ────────────────────────────────────────
+async function loadDriversSidebar() {
+  const drivers = await get('/drivers');
+  state.drivers = drivers || [];
+  const el = document.getElementById('driversList');
+
+  if (!state.drivers.length) {
+    el.innerHTML = '<div style="padding:10px 20px;font-size:11px;color:var(--text-dim)">No drivers synced</div>';
+    return;
+  }
+
+  el.innerHTML = state.drivers.map(d => `
+    <div class="sidebar-item" onclick="filterByDriver(${d.id}, '${d.name}', '${d.team}', ${d.driverNumber}, '${d.headshot || ''}')">
+      <div class="driver-num">#${d.driverNumber}</div>
+      <div class="driver-info">
+        <div class="driver-name-sm">${d.name}</div>
+        <div class="driver-team-sm">${d.team}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function filterByDriver(id, name, team, number, headshot) {
+  // Show all sessions for this driver
+  const sessions = await get(`/drivers/${id}/sessions`);
+  showOnly('homeView');
+
+  const el = document.getElementById('sessionsGrid');
+
+  if (!sessions || sessions.length === 0) {
+    document.getElementById('homeView').querySelector('.section-title') && null;
+    el.innerHTML = '<div class="empty-state">No sessions for this driver</div>';
+    return;
+  }
+
+  el.innerHTML = sessions.map(s => `
+    <div class="session-card" onclick="openSession(${s.id}, '${s.circuit}', '${s.country}', '${s.date}')">
+      <div class="session-card-circuit">${s.circuit}</div>
+      <div class="session-card-country">${s.country}</div>
+      <div class="session-card-meta">
+        <div class="session-card-date">${formatDate(s.date)}</div>
+      </div>
+    </div>
+  `).join('');
 }
 
 // ── Sync ───────────────────────────────────────────────────
@@ -900,18 +932,14 @@ async function triggerSync() {
   const status = document.getElementById('syncStatus');
   btn.disabled = true;
   status.className = 'sync-status loading';
-  status.innerHTML = '<span class="spinner"></span>Syncing session...';
+  status.innerHTML = '<span class="spinner"></span>Syncing...';
 
   const res = await post(`/sync/session/${sessionKey}/${driverNum}`);
   if (res.ok) {
     status.className = 'sync-status success';
-    status.textContent = `✓ Session ${sessionKey} synced successfully`;
+    status.textContent = `✓ Session ${sessionKey} synced`;
     await loadDriversSidebar();
-    await loadLeaderboard();
-    if (activeDriverId) {
-      const d = await get(`/drivers/${activeDriverId}`);
-      if (d) selectDriver(d.id, d.name, d.team, d.driverNumber, d.headshot);
-    }
+    await loadHome();
   } else {
     const err = await res.json().catch(() => ({}));
     status.className = 'sync-status error';
@@ -923,30 +951,48 @@ async function triggerSync() {
 // ── SignalR ────────────────────────────────────────────────
 function connectSignalR() {
   const connection = new signalR.HubConnectionBuilder()
-    .withUrl(`${API}/hubs/leaderboard`)
+    .withUrl(`/hubs/sessions`)
     .withAutomaticReconnect()
     .build();
 
-  connection.on('LeaderboardUpdated', async () => {
-    await loadLeaderboard();
-    showToast('Leaderboard updated');
+  connection.on('SessionSynced', async (data) => {
+    showToast(`New session: ${data.circuit}`);
+    await loadHome();
+    await loadDriversSidebar();
   });
 
-  connection.onreconnecting(() => { document.getElementById('liveStatus').textContent = 'Reconnecting...'; });
-  connection.onreconnected(() => { document.getElementById('liveStatus').textContent = 'Live'; });
+  connection.onreconnecting(() => {
+    document.getElementById('liveStatus').textContent = 'Reconnecting...';
+    document.getElementById('liveDot').classList.remove('connected');
+  });
+
+  connection.onreconnected(() => {
+    document.getElementById('liveStatus').textContent = 'Live';
+    document.getElementById('liveDot').classList.add('connected');
+  });
 
   connection.start()
     .then(() => {
       document.getElementById('liveStatus').textContent = 'Live';
-      document.getElementById('liveIndicator').style.background = 'var(--accent)';
+      document.getElementById('liveDot').classList.add('connected');
     })
     .catch(() => {
-      document.getElementById('liveStatus').textContent = 'Disconnected';
-      document.getElementById('liveIndicator').style.background = 'var(--accent2)';
+      document.getElementById('liveStatus').textContent = 'Offline';
     });
 }
 
-// ── Toast ──────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────
+function formatTime(s) {
+  if (!s) return '--:--.---';
+  const m = Math.floor(s / 60);
+  const sec = (s % 60).toFixed(3).padStart(6, '0');
+  return `${m}:${sec}`;
+}
+
+function formatDate(iso) {
+  return new Date(iso).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -954,22 +1000,10 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ── Helpers ────────────────────────────────────────────────
-function formatTime(seconds) {
-  if (!seconds) return '--:--.---';
-  const m = Math.floor(seconds / 60);
-  const s = (seconds % 60).toFixed(3).padStart(6, '0');
-  return `${m}:${s}`;
-}
-
-function formatDate(iso) {
-  return new Date(iso).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
-}
-
 // ── Init ───────────────────────────────────────────────────
 async function init() {
-  await loadLeaderboard();
   await loadDriversSidebar();
+  await loadHome();
   connectSignalR();
 }
 

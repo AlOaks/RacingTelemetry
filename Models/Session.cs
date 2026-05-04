@@ -18,12 +18,6 @@ public class Session
     public DateTime Date { get; set; }
 
     [Required]
-    public int DriverId { get; set; }
-
-    [Required]
-    public Driver? Driver { get; set; } = null;
-
-    [Required]
     public string SessionName { get; set; } = string.Empty;
 
     [Required]

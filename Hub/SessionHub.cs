@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace RacingTelemetry.Hubs;
 
-public class LeaderboardHub : Hub
+public class SessionHub : Hub
 {
     // Clients connect to this hub at /hubs/leaderboard
     // No methods needed here for now — we're only pushing from server to client

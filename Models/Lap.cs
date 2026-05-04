@@ -8,6 +8,8 @@ public class Lap
 
     public int SessionId { get; set; }
 
+    public int DriverId { get; set; }
+
     public float Sector1Time { get; set; }
 
     public float Sector2Time { get; set; }

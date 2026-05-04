@@ -36,9 +36,16 @@ public static class DriverRoutes
 
         app.MapGet("/drivers/{id}/sessions", async (AppDbContext db, int id) =>
         {
-            var driverSessions = await db.Sessions.Where(s => s.DriverId == id).ToListAsync();
+            var driverSessions = await db.DriverSessions.Where(ds => ds.DriverId == id).ToListAsync();
 
-            return driverSessions.Count == 0 ? Results.NotFound($"No sessions for driver {id}") : Results.Ok(driverSessions);
+            if (driverSessions.Count == 0) return Results.NotFound($"No sessions found for driver {id}");
+
+            // Get only the Ids of the driverSessions
+            var sessionIds = driverSessions.Select(ds => ds.SessionId).ToList();
+            // Fetch by checking if session in scope is withing the sessionsIds of the DriverSessions
+            var sessions = await db.Sessions.Where(s => sessionIds.Contains(s.Id)).ToListAsync();
+
+            return sessions.Count == 0 ? Results.NotFound($"No sessions for driver {id}") : Results.Ok(sessions);
 
         });
     }

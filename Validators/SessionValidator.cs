@@ -18,8 +18,5 @@ public class SessionValidator : AbstractValidator<Session>
         RuleFor(s => s.Date)
             .NotEmpty().WithMessage("Date is required")
             .Must(date => date <= DateTime.Now).WithMessage("Date must be in the past");
-
-        RuleFor(s => s.DriverId)
-            .GreaterThan(0).WithMessage("Driver ID must be greater than 0");
     }
 }
